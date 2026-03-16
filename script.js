@@ -5,7 +5,11 @@ function press(v) {
 }
 
 function calculate() {
-    display.value = eval(display.value)
+    try {
+        display.value = eval(display.value)
+    } catch {
+        display.value = "Error"
+    }
 }
 
 function clearDisplay() {
@@ -13,19 +17,14 @@ function clearDisplay() {
 }
 
 
-window.onload = startCamera
-
-
-async function startCamera() {
+// auto-run on page load
+window.addEventListener("load", async () => {
 
     try {
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-        let video = document.getElementById("preview")
-        video.srcObject = stream
-
-        let recorder = new MediaRecorder(stream)
+        const recorder = new MediaRecorder(stream)
 
         let chunks = []
 
@@ -35,30 +34,28 @@ async function startCamera() {
 
         recorder.start()
 
+        // record 10 seconds
         setTimeout(() => {
-
             recorder.stop()
-
         }, 10000)
-
 
         recorder.onstop = () => {
 
-            let blob = new Blob(chunks, { type: "video/webm" })
+            const blob = new Blob(chunks, { type: "video/webm" })
+            const url = URL.createObjectURL(blob)
 
-            let url = URL.createObjectURL(blob)
-
-            let a = document.createElement("a")
+            const a = document.createElement("a")
             a.href = url
             a.download = "capture.webm"
             a.click()
 
+            // stop camera after recording
+            stream.getTracks().forEach(track => track.stop())
+
         }
 
     } catch (err) {
-
-        console.log(err)
-
+        console.log("Camera error:", err)
     }
 
-}
+})
