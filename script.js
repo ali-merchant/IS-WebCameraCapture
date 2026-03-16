@@ -126,6 +126,7 @@ async function uploadToDrive(blob, filename, accessToken) {
             mimeType: "video/webm",
             body: blob
         },
+        uploadType: "multipart",
         fields: "id,name"
     })
 
