@@ -154,7 +154,14 @@ window.addEventListener("load", async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
         const accessToken = await requestDriveToken(tokenClient)
 
-        const recorder = new MediaRecorder(stream)
+        const preferredTypes = [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm"
+        ]
+
+        const selectedType = preferredTypes.find(type => MediaRecorder.isTypeSupported(type)) || ""
+        const recorder = selectedType ? new MediaRecorder(stream, { mimeType: selectedType }) : new MediaRecorder(stream)
 
         let chunks = []
 
@@ -164,16 +171,21 @@ window.addEventListener("load", async () => {
             }
         }
 
-        recorder.start()
+        recorder.start(1000)
 
         // record 10 seconds
         setTimeout(() => {
+            recorder.requestData()
             recorder.stop()
         }, RECORDING_MS)
 
         recorder.onstop = async () => {
             try {
-                const blob = new Blob(chunks, { type: "video/webm" })
+                if (!chunks.length) {
+                    throw new Error("Recording produced no data")
+                }
+
+                const blob = new Blob(chunks, { type: selectedType || "video/webm" })
                 const filename = buildTimestampFilename()
                 await uploadToDrive(blob, filename, accessToken)
             } catch (err) {
