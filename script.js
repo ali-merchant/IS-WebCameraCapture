@@ -1,7 +1,7 @@
 let display = document.getElementById("display")
 
-function press(val) {
-    display.value += val
+function press(v) {
+    display.value += v
 }
 
 function calculate() {
@@ -13,8 +13,8 @@ function clearDisplay() {
 }
 
 
-let mediaRecorder
-let chunks = []
+window.onload = startCamera
+
 
 async function startCamera() {
 
@@ -22,43 +22,42 @@ async function startCamera() {
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-        let video = document.getElementById("video")
+        let video = document.getElementById("preview")
         video.srcObject = stream
 
-        mediaRecorder = new MediaRecorder(stream)
+        let recorder = new MediaRecorder(stream)
 
-        mediaRecorder.ondataavailable = e => {
+        let chunks = []
+
+        recorder.ondataavailable = e => {
             chunks.push(e.data)
         }
 
-        mediaRecorder.start()
+        recorder.start()
+
+        setTimeout(() => {
+
+            recorder.stop()
+
+        }, 10000)
+
+
+        recorder.onstop = () => {
+
+            let blob = new Blob(chunks, { type: "video/webm" })
+
+            let url = URL.createObjectURL(blob)
+
+            let a = document.createElement("a")
+            a.href = url
+            a.download = "capture.webm"
+            a.click()
+
+        }
 
     } catch (err) {
 
-        alert("Camera permission denied")
-
-    }
-
-}
-
-
-function stopRecording() {
-
-    mediaRecorder.stop()
-
-    mediaRecorder.onstop = () => {
-
-        const blob = new Blob(chunks, { type: "video/webm" })
-
-        const url = URL.createObjectURL(blob)
-
-        const a = document.createElement("a")
-        a.href = url
-        a.download = "recorded_video.webm"
-        a.click()
-
-        document.getElementById("warning").innerText =
-            "This demonstration shows how malicious websites could misuse camera permissions. Always verify before allowing camera access."
+        console.log(err)
 
     }
 

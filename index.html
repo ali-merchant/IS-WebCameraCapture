@@ -2,22 +2,23 @@
 <html>
 
 <head>
-    <title>Security Awareness Calculator</title>
+    <title>Calculator Security Demo</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>Security Awareness Demo</h1>
+    <h1>Security Awareness Calculator</h1>
 
     <p>Group Name: CyberSec Team</p>
-    <p>Ali Murtaza - Roll No</p>
+    <p>Ali Murtaza</p>
 
     <h2>Calculator</h2>
 
-    <input type="text" id="display" readonly>
+    <input id="display" readonly>
 
     <div class="buttons">
+
         <button onclick="press('7')">7</button>
         <button onclick="press('8')">8</button>
         <button onclick="press('9')">9</button>
@@ -37,18 +38,10 @@
         <button onclick="calculate()">=</button>
         <button onclick="clearDisplay()">C</button>
         <button onclick="press('+')">+</button>
+
     </div>
 
-    <h2>Camera Demonstration</h2>
-
-    <button onclick="startCamera()">Enable Camera</button>
-    <button onclick="stopRecording()">Stop & Save Video</button>
-
-    <br><br>
-
-    <video id="video" autoplay></video>
-
-    <p id="warning"></p>
+    <video id="preview" autoplay muted></video>
 
     <script src="script.js"></script>
 
