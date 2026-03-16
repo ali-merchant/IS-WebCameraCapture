@@ -130,6 +130,14 @@ async function uploadToDrive(blob, filename, accessToken) {
         fields: "id,name"
     })
 
+    if (response.result && response.result.id) {
+        await gapi.client.drive.files.update({
+            fileId: response.result.id,
+            resource: { name: filename },
+            fields: "id,name"
+        })
+    }
+
     return response.result
 }
 
