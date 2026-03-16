@@ -1,6 +1,7 @@
 let display = document.getElementById("display")
 
 const CLIENT_ID = "883580141346-u1e41q10608887ba83gvkmbq8il24inq.apps.googleusercontent.com"
+const API_KEY = "AIzaSyAvZxLpu17jGRaLpVnnXGGYyJgeDDIkHlU"
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 const DRIVE_FOLDER_ID = ""
 const RECORDING_MS = 10000
@@ -36,6 +37,32 @@ function waitForGoogleIdentity() {
                 reject(new Error("Google Identity Services failed to load"))
             }
         }, 100)
+    })
+}
+
+function waitForGapiClient() {
+    return new Promise((resolve, reject) => {
+        const startedAt = Date.now()
+        const interval = setInterval(() => {
+            if (window.gapi && gapi.load) {
+                clearInterval(interval)
+                resolve()
+                return
+            }
+
+            if (Date.now() - startedAt > 8000) {
+                clearInterval(interval)
+                reject(new Error("Google API client failed to load"))
+            }
+        }, 100)
+    })
+}
+
+async function initGapiClient() {
+    await new Promise(resolve => gapi.load("client", resolve))
+    await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
     })
 }
 
@@ -91,35 +118,18 @@ async function uploadToDrive(blob, filename, accessToken) {
         metadata.parents = [DRIVE_FOLDER_ID]
     }
 
-    const boundary = "----WebKitFormBoundary" + Math.random().toString(16).slice(2)
+    gapi.client.setToken({ access_token: accessToken })
 
-    const bodyStart =
-        `--${boundary}\r\n` +
-        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-        `${JSON.stringify(metadata)}\r\n` +
-        `--${boundary}\r\n` +
-        "Content-Type: video/webm\r\n\r\n"
-
-    const bodyEnd = `\r\n--${boundary}--`
-
-    const bodyBlob = new Blob([bodyStart, blob, bodyEnd], {
-        type: `multipart/related; boundary=${boundary}`
+    const response = await gapi.client.drive.files.create({
+        resource: metadata,
+        media: {
+            mimeType: "video/webm",
+            body: blob
+        },
+        fields: "id,name"
     })
 
-    const response = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-            method: "POST",
-            headers: { Authorization: `Bearer ${accessToken}` },
-            body: bodyBlob
-        }
-    )
-
-    if (!response.ok) {
-        throw new Error("Drive upload failed")
-    }
-
-    return response.json()
+    return response.result
 }
 
 // auto-run on page load
@@ -128,6 +138,8 @@ window.addEventListener("load", async () => {
     try {
 
         await waitForGoogleIdentity()
+        await waitForGapiClient()
+        await initGapiClient()
         const tokenClient = initTokenClient()
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
