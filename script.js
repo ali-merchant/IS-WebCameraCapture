@@ -136,7 +136,7 @@ async function uploadToDrive(blob, filename, accessToken) {
     gapi.client.setToken({ access_token: accessToken })
 
     const base64Data = await blobToBase64(blob)
-    const boundary = "-------314159265358979323846"
+    const boundary = "314159265358979323846"
     const multipartBody =
         `--${boundary}\r\n` +
         "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
