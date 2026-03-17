@@ -137,18 +137,17 @@ async function uploadToDrive(blob, filename, accessToken) {
 
     const base64Data = await blobToBase64(blob)
     const boundary = "-------314159265358979323846"
-    const delimiter = `--${boundary}\r\n`
-    const closeDelimiter = `\r\n--${boundary}--`
     const multipartBody =
-        delimiter +
+        `--${boundary}\r\n` +
         "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
         JSON.stringify(metadata) +
         "\r\n" +
-        delimiter +
+        `--${boundary}\r\n` +
         `Content-Type: ${blob.type || "video/webm"}\r\n` +
         "Content-Transfer-Encoding: base64\r\n\r\n" +
         base64Data +
-        closeDelimiter
+        "\r\n" +
+        `--${boundary}--`
 
     const response = await gapi.client.request({
         path: "/upload/drive/v3/files",
