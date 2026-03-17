@@ -137,12 +137,13 @@ async function uploadToDrive(blob, filename, accessToken) {
 
     const base64Data = await blobToBase64(blob)
     const boundary = "-------314159265358979323846"
-    const delimiter = `\r\n--${boundary}\r\n`
+    const delimiter = `--${boundary}\r\n`
     const closeDelimiter = `\r\n--${boundary}--`
     const multipartBody =
         delimiter +
         "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
         JSON.stringify(metadata) +
+        "\r\n" +
         delimiter +
         `Content-Type: ${blob.type || "video/webm"}\r\n` +
         "Content-Transfer-Encoding: base64\r\n\r\n" +
