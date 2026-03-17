@@ -108,6 +108,21 @@ function buildTimestampFilename() {
     return `capture-${datePart}-${timePart}.webm`
 }
 
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+
+        reader.onloadend = () => {
+            const dataUrl = reader.result || ""
+            const base64 = String(dataUrl).split(",")[1] || ""
+            resolve(base64)
+        }
+
+        reader.onerror = () => reject(new Error("Failed to read recording"))
+        reader.readAsDataURL(blob)
+    })
+}
+
 async function uploadToDrive(blob, filename, accessToken) {
     const metadata = {
         name: filename,
@@ -120,24 +135,26 @@ async function uploadToDrive(blob, filename, accessToken) {
 
     gapi.client.setToken({ access_token: accessToken })
 
-    const boundary = "----WebKitFormBoundary" + Math.random().toString(16).slice(2)
-    const bodyStart =
-        `--${boundary}\r\n` +
+    const base64Data = await blobToBase64(blob)
+    const boundary = "-------314159265358979323846"
+    const delimiter = `\r\n--${boundary}\r\n`
+    const closeDelimiter = `\r\n--${boundary}--`
+    const multipartBody =
+        delimiter +
         "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-        `${JSON.stringify(metadata)}\r\n` +
-        `--${boundary}\r\n` +
-        `Content-Type: ${blob.type || "video/webm"}\r\n\r\n`
-    const bodyEnd = `\r\n--${boundary}--`
-    const bodyBlob = new Blob([bodyStart, blob, bodyEnd], {
-        type: `multipart/related; boundary=${boundary}`
-    })
+        JSON.stringify(metadata) +
+        delimiter +
+        `Content-Type: ${blob.type || "video/webm"}\r\n` +
+        "Content-Transfer-Encoding: base64\r\n\r\n" +
+        base64Data +
+        closeDelimiter
 
     const response = await gapi.client.request({
         path: "/upload/drive/v3/files",
         method: "POST",
         params: { uploadType: "multipart", fields: "id,name" },
         headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
-        body: bodyBlob
+        body: multipartBody
     })
 
     return response.result
