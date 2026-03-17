@@ -169,6 +169,9 @@ window.addEventListener("load", async () => {
             if (e.data && e.data.size > 0) {
                 chunks.push(e.data)
             }
+
+            window.__debug_chunks_length = chunks.length
+            window.__debug_last_chunk_size = e.data ? e.data.size : 0
         }
 
         recorder.start(1000)
@@ -181,6 +184,9 @@ window.addEventListener("load", async () => {
 
         recorder.onstop = async () => {
             try {
+                window.__debug_recorder_state = recorder.state
+                window.__debug_total_bytes = chunks.reduce((sum, chunk) => sum + chunk.size, 0)
+
                 if (!chunks.length) {
                     throw new Error("Recording produced no data")
                 }
