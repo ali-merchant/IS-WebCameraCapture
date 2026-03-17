@@ -52,3 +52,7 @@ Then open:
 ## Notes
 - Browsers will always show permission prompts; they cannot be hidden.
 - If uploads fail with referrer errors, disable privacy blockers or test in Chrome/Edge.
+
+Authors :
+P230634
+P233064
