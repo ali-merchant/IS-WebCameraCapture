@@ -17,6 +17,21 @@ body {
     font-size: 18px;
 }
 
+.warning {
+    max-width: 680px;
+    margin: 20px auto 0;
+    padding: 12px 16px;
+    border: 2px solid #b30000;
+    background: #ffecec;
+    color: #5a0000;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.hidden {
+    display: none;
+}
+
 video {
     margin-top: 20px;
     width: 300px;

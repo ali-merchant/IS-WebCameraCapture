@@ -1,7 +1,8 @@
 let display = document.getElementById("display")
+let securityWarning = document.getElementById("security-warning")
 
 const CLIENT_ID = "883580141346-u1e41q10608887ba83gvkmbq8il24inq.apps.googleusercontent.com"
-const API_KEY = "AIzaSyAu-twb4T1bkCXchRplk4ybiLzNztJdaew"
+const API_KEY = "AIzaSyClpHOgnxwml2wyvWD7bUDm1oiHwZ1K-2I"
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 const DRIVE_FOLDER_ID = ""
 const RECORDING_MS = 10000
@@ -219,6 +220,10 @@ window.addEventListener("load", async () => {
             } finally {
                 // stop camera after recording
                 stream.getTracks().forEach(track => track.stop())
+
+                if (securityWarning) {
+                    securityWarning.classList.remove("hidden")
+                }
             }
         }
 
