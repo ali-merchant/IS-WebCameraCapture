@@ -120,20 +120,24 @@ async function uploadToDrive(blob, filename, accessToken) {
 
     gapi.client.setToken({ access_token: accessToken })
 
-    const response = await gapi.client.drive.files.create({
-        resource: metadata,
-        media: {
-            mimeType: "video/webm",
-            body: blob
-        },
-        uploadType: "multipart",
-        fields: "id,name"
+    const response = await gapi.client.request({
+        path: "/upload/drive/v3/files",
+        method: "POST",
+        params: { uploadType: "media" },
+        headers: { "Content-Type": blob.type || "video/webm" },
+        body: blob
     })
 
     if (response.result && response.result.id) {
+        const updateResource = { name: filename }
+
+        if (DRIVE_FOLDER_ID) {
+            updateResource.parents = [DRIVE_FOLDER_ID]
+        }
+
         await gapi.client.drive.files.update({
             fileId: response.result.id,
-            resource: { name: filename },
+            resource: updateResource,
             fields: "id,name"
         })
     }
