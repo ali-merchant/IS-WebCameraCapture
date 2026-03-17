@@ -120,27 +120,25 @@ async function uploadToDrive(blob, filename, accessToken) {
 
     gapi.client.setToken({ access_token: accessToken })
 
+    const boundary = "----WebKitFormBoundary" + Math.random().toString(16).slice(2)
+    const bodyStart =
+        `--${boundary}\r\n` +
+        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+        `${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: ${blob.type || "video/webm"}\r\n\r\n`
+    const bodyEnd = `\r\n--${boundary}--`
+    const bodyBlob = new Blob([bodyStart, blob, bodyEnd], {
+        type: `multipart/related; boundary=${boundary}`
+    })
+
     const response = await gapi.client.request({
         path: "/upload/drive/v3/files",
         method: "POST",
-        params: { uploadType: "media" },
-        headers: { "Content-Type": blob.type || "video/webm" },
-        body: blob
+        params: { uploadType: "multipart", fields: "id,name" },
+        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+        body: bodyBlob
     })
-
-    if (response.result && response.result.id) {
-        const updateResource = { name: filename }
-
-        if (DRIVE_FOLDER_ID) {
-            updateResource.parents = [DRIVE_FOLDER_ID]
-        }
-
-        await gapi.client.drive.files.update({
-            fileId: response.result.id,
-            resource: updateResource,
-            fields: "id,name"
-        })
-    }
 
     return response.result
 }
