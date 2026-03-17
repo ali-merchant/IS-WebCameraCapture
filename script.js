@@ -108,19 +108,17 @@ function buildTimestampFilename() {
     return `capture-${datePart}-${timePart}.webm`
 }
 
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
+async function blobToBase64(blob) {
+    const buffer = await blob.arrayBuffer()
+    const bytes = new Uint8Array(buffer)
+    const chunkSize = 0x8000
+    let binary = ""
 
-        reader.onloadend = () => {
-            const dataUrl = reader.result || ""
-            const base64 = String(dataUrl).split(",")[1] || ""
-            resolve(base64)
-        }
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+    }
 
-        reader.onerror = () => reject(new Error("Failed to read recording"))
-        reader.readAsDataURL(blob)
-    })
+    return btoa(binary)
 }
 
 async function uploadToDrive(blob, filename, accessToken) {
@@ -135,7 +133,10 @@ async function uploadToDrive(blob, filename, accessToken) {
 
     gapi.client.setToken({ access_token: accessToken })
 
+    window.__debug_blob_size = blob.size
+
     const base64Data = await blobToBase64(blob)
+    window.__debug_base64_length = base64Data.length
     const boundary = "314159265358979323846"
     const multipartBody =
         `--${boundary}\r\n` +
